@@ -29,11 +29,6 @@ contract Staking {
 
     mapping(address => uint256) public balanceOf;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "You're not authorized");
-        _;
-    }
-
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
         updatedAt = lastTimeRewardApplicable();
@@ -51,7 +46,14 @@ contract Staking {
         rewardToken = IERC20(_rewardToken);
     }
 
-    function setRewardDuration(uint256 _duration) external onlyOwner {
+    function onlyOwner() private view {
+        if (msg.sender != owner) {
+            revert ONLY_OWNER_ALLOWED();
+        }
+    }
+
+    function setRewardDuration(uint256 _duration) external {
+        onlyOwner();
         if (finishedAt > block.timestamp) {
             revert REWARD_DURATION_NOT_FINISHED();
         }
@@ -60,7 +62,8 @@ contract Staking {
 
     function modifyRewardAmount(
         uint256 _amount
-    ) external onlyOwner updateReward(address(0)) {
+    ) external updateReward(address(0)) {
+        onlyOwner();
         if (block.timestamp > finishedAt) {
             rewardRate = _amount / duration;
         } else {
