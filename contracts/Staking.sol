@@ -52,10 +52,9 @@ contract Staking {
     }
 
     function setRewardDuration(uint256 _duration) external onlyOwner {
-        require(
-            finishedAt < block.timestamp,
-            "Reward duration has not finished"
-        );
+        if (finishedAt > block.timestamp) {
+            revert REWARD_DURATION_NOT_FINISHED();
+        }
         duration = _duration;
     }
 
