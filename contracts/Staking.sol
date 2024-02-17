@@ -29,17 +29,6 @@ contract Staking {
 
     mapping(address => uint256) public balanceOf;
 
-    modifier updateReward(address _account) {
-        rewardPerTokenStored = rewardPerToken();
-        updatedAt = lastTimeRewardApplicable();
-
-        if (_account != address(0)) {
-            rewards[_account] = earned(_account);
-            userRewardPerTokenPaid[_account] = rewardPerTokenStored;
-        }
-        _;
-    }
-
     constructor(address _stakingToken, address _rewardToken) {
         owner = msg.sender;
         stakingToken = IERC20(_stakingToken);
@@ -52,6 +41,16 @@ contract Staking {
         }
     }
 
+    function updateReward(address _account) private {
+        rewardPerTokenStored = rewardPerToken();
+        updatedAt = lastTimeRewardApplicable();
+
+        if (_account != address(0)) {
+            rewards[_account] = earned(_account);
+            userRewardPerTokenPaid[_account] = rewardPerTokenStored;
+        }
+    }
+
     function setRewardDuration(uint256 _duration) external {
         onlyOwner();
         if (finishedAt > block.timestamp) {
@@ -60,10 +59,11 @@ contract Staking {
         duration = _duration;
     }
 
-    function modifyRewardAmount(
-        uint256 _amount
-    ) external updateReward(address(0)) {
+    function modifyRewardAmount(uint256 _amount) external {
         onlyOwner();
+
+        updateReward(address(0));
+
         if (block.timestamp > finishedAt) {
             rewardRate = _amount / duration;
         } else {
@@ -84,7 +84,9 @@ contract Staking {
         updatedAt = block.timestamp;
     }
 
-    function stake(uint256 _amount) external updateReward(msg.sender) {
+    function stake(uint256 _amount) external {
+        updateReward(msg.sender);
+
         if (_amount <= 0) {
             revert ZERO_VALUE_NOT_ALLOWED();
         }
@@ -94,7 +96,9 @@ contract Staking {
         totalSupply += _amount;
     }
 
-    function withdraw(uint256 _amount) external updateReward(msg.sender) {
+    function withdraw(uint256 _amount) external {
+        updateReward(msg.sender);
+
         if (_amount <= 0) {
             revert ZERO_VALUE_NOT_ALLOWED();
         }
@@ -126,7 +130,9 @@ contract Staking {
             rewards[_account];
     }
 
-    function getReward() external updateReward(msg.sender) {
+    function getReward() external {
+        updateReward(msg.sender);
+
         uint reward = rewards[msg.sender];
 
         if (reward > 0) {
