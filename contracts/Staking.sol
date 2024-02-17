@@ -81,7 +81,9 @@ contract Staking {
     }
 
     function stake(uint256 _amount) external updateReward(msg.sender) {
-        require(_amount > 0, "Zero amount not allowed");
+        if (_amount <= 0) {
+            revert ZERO_VALUE_NOT_ALLOWED();
+        }
         stakingToken.transferFrom(msg.sender, address(this), _amount);
 
         balanceOf[msg.sender] += _amount;
@@ -89,7 +91,9 @@ contract Staking {
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
-        require(_amount > 0, "Zero amount not allowed");
+        if (_amount <= 0) {
+            revert ZERO_VALUE_NOT_ALLOWED();
+        }
         stakingToken.transfer(msg.sender, _amount);
 
         balanceOf[msg.sender] -= _amount;
