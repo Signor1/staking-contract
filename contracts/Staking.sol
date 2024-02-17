@@ -11,8 +11,8 @@ error REWARD_AMOUNT_GREATER_THAN_REWARD_TOKEN();
 error ZERO_VALUE_NOT_ALLOWED();
 
 contract Staking {
-    IERC20 public immutable stakingToken;
-    IERC20 public immutable rewardToken;
+    address stakingToken;
+    address rewardToken;
 
     address public owner;
 
@@ -31,8 +31,8 @@ contract Staking {
 
     constructor(address _stakingToken, address _rewardToken) {
         owner = msg.sender;
-        stakingToken = IERC20(_stakingToken);
-        rewardToken = IERC20(_rewardToken);
+        stakingToken = _stakingToken;
+        rewardToken = _rewardToken;
     }
 
     function onlyOwner() private view {
@@ -76,7 +76,9 @@ contract Staking {
             revert ZERO_REWARD_NOT_ALLOWED();
         }
 
-        if (rewardRate * duration > rewardToken.balanceOf(address(this))) {
+        if (
+            rewardRate * duration > IERC20(rewardToken).balanceOf(address(this))
+        ) {
             revert REWARD_AMOUNT_GREATER_THAN_REWARD_TOKEN();
         }
 
@@ -90,7 +92,7 @@ contract Staking {
         if (_amount <= 0) {
             revert ZERO_VALUE_NOT_ALLOWED();
         }
-        stakingToken.transferFrom(msg.sender, address(this), _amount);
+        IERC20(stakingToken).transferFrom(msg.sender, address(this), _amount);
 
         balanceOf[msg.sender] += _amount;
         totalSupply += _amount;
@@ -102,7 +104,7 @@ contract Staking {
         if (_amount <= 0) {
             revert ZERO_VALUE_NOT_ALLOWED();
         }
-        stakingToken.transfer(msg.sender, _amount);
+        IERC20(stakingToken).transfer(msg.sender, _amount);
 
         balanceOf[msg.sender] -= _amount;
         totalSupply -= _amount;
@@ -137,7 +139,7 @@ contract Staking {
 
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            rewardToken.transfer(msg.sender, reward);
+            IERC20(rewardToken).transfer(msg.sender, reward);
         }
     }
 
