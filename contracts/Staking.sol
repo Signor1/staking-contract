@@ -69,11 +69,13 @@ contract Staking {
             rewardRate = (remainingRewards + _amount) / duration;
         }
 
-        require(rewardRate > 0, "Reward rate = 0");
-        require(
-            rewardRate * duration <= rewardToken.balanceOf(address(this)),
-            "Reward amount > reward token"
-        );
+        if (rewardRate <= 0) {
+            revert ZERO_REWARD_NOT_ALLOWED();
+        }
+
+        if (rewardRate * duration > rewardToken.balanceOf(address(this))) {
+            revert REWARD_AMOUNT_GREATER_THAN_REWARD_TOKEN();
+        }
 
         finishedAt = block.timestamp + duration;
         updatedAt = block.timestamp;
